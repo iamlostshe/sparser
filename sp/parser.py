@@ -27,11 +27,15 @@ from loguru import logger
 from .intents import Intent
 from .utils import load_file, save_file
 
-url = "https://docs.google.com/spreadsheets/d/1pP_qEHh4PBk5Rsb7Wk9iVbJtTA11O9nTQbo1JFjnrGU/export?format=xlsx"
-RAW_SC_PATH = Path("sp_data/sc.xlsx")
-SC_PATH = Path("sp_data/sc.json")
-SC_UPDATES_PATH = Path("sp_data/updates.json")
-INDEX_PATH = Path("sp_data/index.json")
+URL = "https://docs.google.com/spreadsheets/d/1pP_qEHh4PBk5Rsb7Wk9iVbJtTA11O9nTQbo1JFjnrGU"
+
+DATA_FOLDER = Path("sp_data")
+DATA_FOLDER.mkdir(exist_ok=True)
+
+RAW_SC_PATH = DATA_FOLDER / "sc.xlsx"
+SC_PATH = DATA_FOLDER / "sc.json"
+SC_UPDATES_PATH = DATA_FOLDER / "updates.json"
+INDEX_PATH = DATA_FOLDER / "index.json"
 
 
 # Вспомогательные функции
@@ -443,14 +447,11 @@ class Schedule:
 
     def _load_schedule(self, url: str) -> str:
         logger.info("Download schedule csv_file ...")
-        try:
-            csv_file = requests.get(url).content
-            with RAW_SC_PATH.open("wb") as f:
-                f.write(csv_file)
-            return hashlib.md5(csv_file).hexdigest()
-        except Exception as e:
-            logger.exception(e)
-            raise ValueError("Failed to load schedule") from e
+        url += "/export?format=xlsx"
+        csv_file = requests.get(url).content
+        with RAW_SC_PATH.open("wb") as f:
+            f.write(csv_file)
+        return hashlib.md5(csv_file).hexdigest()
 
     def _update_diff_file(self, a: ScheduleDict, b: ScheduleDict) -> None:
         """Обновляет файл списка изменений расписания.
@@ -505,7 +506,7 @@ class Schedule:
         logger.info("Start schedule update ...")
 
         # Скачиваем файл с расписанием
-        file_hash = self._load_schedule(url)
+        file_hash = self._load_schedule(URL)
         if file_hash is None:
             # Откладываем обновление на минуту
             self.next_parse = timestamp + 60
@@ -513,7 +514,8 @@ class Schedule:
             return
 
         # Сравниваем хеши расписаний
-        if t.get("hash", "") == file_hash:
+        new_hash = t.get("hash", "") if t else None
+        if new_hash == file_hash:
             logger.info("Schedule is up to date")
             self.next_parse = timestamp + 1800
             self._save_schedule(t)
@@ -538,7 +540,8 @@ class Schedule:
         }
 
         self.next_parse = timestamp + 1800
-        self._update_diff_file(t, new_t)
+        if t:
+            self._update_diff_file(t, new_t)
         self._save_schedule(new_t, overwrite=True)
 
     # Получение данных из расписания

@@ -47,7 +47,7 @@ def save_file(path: Path, data: _T) -> _T:
         path.parents[0].mkdir(parents=True, exist_ok=True)
         logger.info("Created not exists dirs")
 
-    with open(path, "w") as f:
+    with path.open("w") as f:
         f.write(ujson.dumps(data, indent=4, ensure_ascii=False))
     return data
 
@@ -67,16 +67,15 @@ def load_file(path: Path, data: _T | None = None) -> _T:
         Данные методы будут перемещены.
     """
     try:
-        with open(path) as f:
+        with path.open() as f:
             return ujson.loads(f.read())
     except FileNotFoundError:
         if data is not None:
             logger.warning("File not found {} -> create", path)
             save_file(path, data)
             return data
-        else:
-            logger.error("File not found {}", path)
-            return data
+        logger.error("File not found {}", path)
+        return data
     except Exception as e:
         logger.exception(e)
         return data
@@ -112,6 +111,6 @@ def get_str_timedelta(s: int, hours: bool | None = True) -> str:
         h, r = divmod(s, 3600)
         m, s = divmod(r, 60)
         return f"{h:02}:{m:02}:{s:02}"
-    else:
-        m, s = divmod(s, 60)
-        return f"{m:02}:{s:02}"
+
+    m, s = divmod(s, 60)
+    return f"{m:02}:{s:02}"
