@@ -1,3 +1,23 @@
+[project]
+name = "sp"
+version = "6.5"
+description = "Platform for working with class schedules."
+requires-python = ">=3.11"
+authors = [{ name = "Milinuri Nirvalen", email = "pentergust@mail.ru" }]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+# TODO: Migrate to aiosqlite
+# TODO: Migrate to orjson
+dependencies = [
+    "aiohttp>=3.12.15",
+    "click>=8.2.1",
+    "loguru>=0.7.3",
+    "openpyxl>=3.1.5",
+    "requests>=2.32.5",
+    "tortoise-orm>=0.25.1",
+    "ujson>=5.11.0",
+]
+
 # Версия проекта -------------------------------------------------------
 
 [tool.sp]
@@ -5,74 +25,47 @@ version = "v6.5"
 build = 267
 api_version = 7
 
-# main -----------------------------------------------------------------
+# Other dependencies ---------------------------------------------------
 
-[tool.poetry]
-name = "sp"
-version = "6.4"
-description = "Platform for working with class schedules."
-authors = ["Milinuri Nirvalen <pentergust@mail.ru>"]
-license = "GPL-3.0-or-later"
-readme = "README.md"
-repository = "https://codeberg.org/Salormoon/Sparser"
-documentation = "https://sparser.readthedocs.io/ru/latest/"
+[dependency-groups]
+dev = ["pyright>=1.1.404", "ruff>=0.12.11"]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.18",
+    "mkdocstrings-python>=1.18.2",
+]
+telegram = ["aiogram>=3.22.0", "python-dotenv>=1.1.1"]
 
-
-# Main dependencies -------------------------------------------------------
-
-[tool.poetry.dependencies]
-python = "^3.10"
-requests = "^2.32.3"
-loguru = "^0.7.3"
-ujson = "^5.10.0"
-click = "^8.1.8"
-openpyxl = "^3.1.5"
-tortoise-orm = "^0.24.2"
-asyncpg = "^0.30.0"
-
-
-
-# For dev dependencies ----------------------------------------------------
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-icecream = "^2.1.4"
-ruff = "^0.9.3"
-mypy = "^1.14.1"
-
-
-# For building docs with sphinx ----------------------------------------
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7.2.6"
-sphinx-copybutton = "^0.5.2"
-sphinx-book-theme = "^1.1.2"
-
-
-# For Telegram bot Platform --------------------------------------------
-
-[tool.poetry.group.telegram.dependencies]
-aiogram = "^3.2.0"
-python-dotenv = "^1.0.0"
-
-
-# Configure Ruff -------------------------------------------------------
+# Ruff linter ----------------------------------------------------------
 
 [tool.ruff]
 line-length = 80
 indent-width = 4
-
-# Assume Python 3.10
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
-select = ["W", "E", "F", "I", "D", "N", "PL", "UP", "ANN"]
-ignore = ["D407", "D413", "D107", "D213", "D203"]
+select = ["ALL"]
+ignore = [
+    "D407",
+    "D107",
+    "D213",
+    "D203",
+    "RUF",
+    "COM",    # trailing commas, controlled by format
+    "EM101",  # EAssign to variable; remove string literal
+    "EM102",  # Exception must not use an f-string literal, assign to variable first
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "INP001", # part of an implicit namespace package. Add an `__init__.py`.
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Build system ---------------------------------------------------------
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
